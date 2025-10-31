@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>House Price Predictor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #0b1220; --panel: #121a2b; --text: #e6edf7; --muted: #9fb0d3; --accent: #4f8cff; --accent-2: #9aa8ff; }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); }
+        .wrap { max-width: 860px; margin: 0 auto; padding: 32px 16px; }
+        .card { background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); }
+        h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: 0.2px; }
+        .sub { color: var(--muted); margin: 0 0 24px; font-size: 14px; }
+        form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+        .field { display: flex; flex-direction: column; gap: 8px; }
+        label { font-weight: 600; font-size: 13px; color: var(--muted); }
+        input[type=number] { background: var(--panel); color: var(--text); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 12px; outline: none; transition: border .2s; }
+        input[type=number]:focus { border-color: var(--accent); }
+        .actions { grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; }
+        button { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; border: 0; border-radius: 10px; padding: 10px 14px; font-weight: 600; cursor: pointer; }
+        .note { font-size: 12px; color: var(--muted); }
+        .alert { background: #1e2a44; color: #e2ecff; border: 1px solid #2f4170; padding: 10px 12px; border-radius: 10px; margin-bottom: 16px; }
+        .result { margin-top: 18px; font-size: 18px; font-weight: 600; }
+        .footer { margin-top: 22px; color: var(--muted); font-size: 12px; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12); font-size: 11px; color: var(--muted); }
+    </style>
+    <script>
+        function formatCurrency(value) {
+            try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value); } catch(e) { return value; }
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const el = document.getElementById('pred-value');
+            if (el && el.dataset.raw) {
+                const v = parseFloat(el.dataset.raw);
+                if (!Number.isNaN(v)) {
+                    el.textContent = formatCurrency(v);
+                }
+            }
+        });
+    </script>
+    </head>
+<body>
+<div class="wrap">
+    <div class="card">
+        <div style="display:flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <div>
+                <h1>House Price Predictor</h1>
+                <p class="sub">Enter features below and get an estimated price.</p>
+            </div>
+            <span class="badge">{{ 'Model: Ready' if model_ready else 'Model: Not loaded' }}</span>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for m in messages %}
+                <div class="alert">{{ m }}</div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('predict') }}" method="post">
+            {% if features and features|length > 0 %}
+                {% for f in features %}
+                <div class="field">
+                    <label for="{{ f.name }}">{{ f.label or f.name }}</label>
+                    {% if f.type == 'select' %}
+                        <select id="{{ f.name }}" name="{{ f.name }}" required style="background: var(--panel); color: var(--text); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 12px;">
+                            {% for opt in f.options %}
+                                <option value="{{ opt }}" {% if f.default is not none and opt == f.default %}selected{% endif %}>{{ opt }}</option>
+                            {% endfor %}
+                        </select>
+                    {% else %}
+                        <input id="{{ f.name }}" name="{{ f.name }}" type="number" step="any" required value="{{ f.default if f.default is not none else '' }}" />
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <div class="actions">
+                    <button type="submit">Predict Price</button>
+                    <span class="note">Ensure your `features.json` order matches model training order.</span>
+                </div>
+            {% else %}
+                <div class="alert">No features defined. Add a <code>features.json</code> file.</div>
+            {% endif %}
+        </form>
+
+        {% if prediction is not none %}
+            <div class="result">Estimated Price: <span id="pred-value" data-raw="{{ prediction }}">{{ prediction }}</span></div>
+        {% endif %}
+
+        <div class="footer">
+            Place a <code>model.pkl</code> (scikit-learn/joblib) or a <code>model.py</code> with <code>predict(features: Dict[str, float]) -&gt; float</code> in this folder.
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
+

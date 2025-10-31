@@ -1,0 +1,12 @@
+[
+  { "name": "Area", "label": "Area (sqft/meters)", "type": "number", "default": 1800 },
+  { "name": "Bedrooms", "label": "Bedrooms", "type": "number", "default": 3 },
+  { "name": "Bathrooms", "label": "Bathrooms", "type": "number", "default": 2 },
+  { "name": "Floors", "label": "Floors", "type": "number", "default": 1 },
+  { "name": "YearBuilt", "label": "Year Built", "type": "number", "default": 2005 },
+  { "name": "Location", "label": "Location", "type": "select", "options": ["Downtown", "Suburban"], "default": "Suburban" },
+  { "name": "Condition", "label": "Condition", "type": "select", "options": ["Excellent", "Good", "Fair"], "default": "Good" },
+  { "name": "Garage", "label": "Garage", "type": "select", "options": ["Yes", "No"], "default": "Yes" }
+]
+
+
